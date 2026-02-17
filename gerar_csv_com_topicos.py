@@ -52,40 +52,76 @@ TOPICO_NOME = {
     30: "Horticultura e Melhoramento Genético",
 }
 
-# Grande área para agrupamento macro (útil para análise de rede)
+# Área específica para agrupamento (útil para análise de rede)
 TOPICO_AREA = {
     -1: "Não classificado",
-    0: "Ciências Humanas e Sociais",
-    1: "Ciências Exatas e da Terra",
-    2: "Engenharias",
-    3: "Ciências Exatas e da Terra",
-    4: "Engenharias",
-    5: "Engenharias",
-    6: "Ciências Exatas e da Terra",
-    7: "Engenharias",
-    8: "Engenharias",
-    9: "Ciências Agrárias",
-    10: "Engenharias",
-    11: "Engenharias",
-    12: "Ciências da Saúde",
-    13: "Ciências Agrárias",
-    14: "Engenharias",
-    15: "Ciências Exatas e da Terra",
-    16: "Ciências Biológicas",
-    17: "Ciências da Saúde",
-    18: "Ciências Exatas e da Terra",
-    19: "Ciências Humanas e Sociais",
-    20: "Ciências Humanas e Sociais",
-    21: "Engenharias",
-    22: "Ciências Exatas e da Terra",
-    23: "Engenharias",
-    24: "Ciências da Saúde",
-    25: "Ciências Agrárias",
-    26: "Engenharias",
-    27: "Engenharias",
-    28: "Engenharias",
-    29: "Engenharias",
-    30: "Ciências Agrárias",
+    0: "Educação",
+    1: "Química",
+    2: "Engenharia Elétrica",
+    3: "Física",
+    4: "Telecomunicações",
+    5: "Engenharia Elétrica",
+    6: "Ciência da Computação",
+    7: "Engenharia Civil",
+    8: "Engenharia de Energia",
+    9: "Ciência de Alimentos",
+    10: "Engenharia Civil",
+    11: "Engenharia de Energia",
+    12: "Saúde Pública",
+    13: "Ciência de Alimentos",
+    14: "Engenharia de Materiais",
+    15: "Geociências",
+    16: "Ecologia",
+    17: "Biomedicina",
+    18: "Ciência da Computação",
+    19: "Educação",
+    20: "Comunicação e Sociologia",
+    21: "Engenharia Elétrica",
+    22: "Ciência da Computação",
+    23: "Engenharia Química",
+    24: "Medicina",
+    25: "Zootecnia",
+    26: "Engenharia Elétrica",
+    27: "Engenharia de Materiais",
+    28: "Engenharia de Energia",
+    29: "Engenharia Elétrica",
+    30: "Agronomia",
+}
+
+# Subárea específica (nível mais granular - ideal para análise de coautoria)
+TOPICO_SUBAREA = {
+    -1: "Não classificado",
+    0: "Políticas Educacionais e Ensino",
+    1: "Química de Materiais e Espectroscopia",
+    2: "Otimização e Sistemas de Distribuição",
+    3: "Física Computacional e Simulação Molecular",
+    4: "Redes Móveis e Comunicação Cooperativa",
+    5: "Máquinas Elétricas e Acionamentos",
+    6: "Computação em Nuvem e Aprendizado de Máquina",
+    7: "Geotecnia e Mecânica dos Solos",
+    8: "Energia Solar Fotovoltaica",
+    9: "Bioquímica de Alimentos e Enzimologia",
+    10: "Estruturas de Concreto e Aço",
+    11: "Bioenergia e Análise de Viabilidade",
+    12: "Epidemiologia e Doenças Crônicas",
+    13: "Tecnologia de Óleos e Gorduras",
+    14: "Compósitos e Fibras Reforçadas",
+    15: "Sensoriamento Remoto e Geoprocessamento",
+    16: "Ecologia da Polinização",
+    17: "Parasitologia e Imunologia",
+    18: "Modelagem e Complexidade Computacional",
+    19: "Educação Musical e Cultura",
+    20: "Mídias Digitais e Redes Sociais",
+    21: "Estabilidade de Sistemas de Potência",
+    22: "Mineração de Texto e Classificação",
+    23: "Biodiesel e Biocombustíveis",
+    24: "Oncologia e Rastreamento de Câncer",
+    25: "Aquicultura e Nutrição Animal",
+    26: "Conversores de Potência",
+    27: "Microfabricação e Dispositivos",
+    28: "Sistemas Térmicos e Fotovoltaicos",
+    29: "Controle e Automação de Motores",
+    30: "Olericultura e Melhoramento Vegetal",
 }
 
 print("Carregando dados...")
@@ -115,6 +151,7 @@ df_merged = df_original.merge(df_topicos, on="id_artigo", how="left")
 # Adicionar colunas descritivas
 df_merged["topico_nome"] = df_merged["topico"].map(TOPICO_NOME).fillna("Não classificado")
 df_merged["topico_area"] = df_merged["topico"].map(TOPICO_AREA).fillna("Não classificado")
+df_merged["topico_subarea"] = df_merged["topico"].map(TOPICO_SUBAREA).fillna("Não classificado")
 df_merged["topico_palavras_chave"] = df_merged["topico"].map(palavras_por_topico).fillna("")
 
 # Preencher artigos sem abstract (sem tópico atribuído)
@@ -128,15 +165,16 @@ print(f"\nColunas do CSV:")
 for col in df_merged.columns:
     print(f"  - {col}")
 
-# Resumo das áreas
-print(f"\nDistribuição por grande área (linhas únicas por artigo):")
-resumo = (
-    df_merged.drop_duplicates(subset="id_artigo")
-    .groupby("topico_area")
-    .size()
-    .sort_values(ascending=False)
-)
-for area, count in resumo.items():
-    print(f"  {area}: {count} artigos")
+# Resumo por área
+df_uniq = df_merged.drop_duplicates(subset="id_artigo")
+print(f"\nDistribuição por área (artigos únicos):")
+resumo_area = df_uniq.groupby("topico_area").size().sort_values(ascending=False)
+for area, count in resumo_area.items():
+    print(f"  {area}: {count}")
+
+print(f"\nDistribuição por subárea (artigos únicos):")
+resumo_sub = df_uniq.groupby("topico_subarea").size().sort_values(ascending=False)
+for sub, count in resumo_sub.items():
+    print(f"  {sub}: {count}")
 
 print("\nDone!")
